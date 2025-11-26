@@ -1,118 +1,78 @@
-# 场景处理程序
+# AI Query Generation and Evaluation Pipeline
 
-这个Python程序可以根据问题中的场景（用[]标记）自动生成：
-1. 中文版xlsx文件
-2. 英文版xlsx文件
-3. 中文版query_output json文件
-4. 英文版query_output json文件
+This project contains a set of scripts to generate AI queries, translate them, generate responses using an LLM, and evaluate the responses for safety.
 
-## 安装依赖
+## Project Structure
 
-### 方法1: 使用pip（推荐使用虚拟环境）
+The project is organized as follows:
 
+- `dataset/`: Directory containing all data files.
+  - `build_prompt/`: Contains Excel files used for prompt generation (`aiscenario.xlsx`, `aicos.xlsx`).
+  - `queries/`: Contains generated query JSON files (`all_ai_queries.json`, `all_ai_queries_en.json`, `merged_queries.json`).
+  - `response/`: Contains generated responses (`responses.json`).
+  - `evaluations/`: Contains evaluation results (`evaluation_keywords.json`, `evaluation_llm.json`).
+- `create_excel_files.py`: Generates the initial Excel files from hardcoded data.
+- `generate_prompts.py`: Generates queries based on the Excel files.
+- `translate_queries.py`: Translates the generated queries to English.
+- `merge_jsons.py`: Merges all query JSON files.
+- `generate_responses.py`: Generates responses for the merged queries (currently using a placeholder LLM).
+- `evaluate_keywords.py`: Evaluates responses based on keywords in `warning.txt`.
+- `evaluate_llm_safety.py`: Evaluates responses for safety using an LLM (currently using a placeholder).
+- `warning.txt`: List of keywords used for keyword-based evaluation.
+
+## Usage
+
+Follow these steps to run the entire pipeline:
+
+### 1. Generate Excel Files
+Generate `dataset/build_prompt/aiscenario.xlsx` and `dataset/build_prompt/aicos.xlsx`.
 ```bash
-# 创建虚拟环境（推荐）
-python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
-# 或
-venv\Scripts\activate  # Windows
-
-# 安装依赖
-pip install -r requirements.txt
+python3 create_excel_files.py
 ```
 
-### 方法2: 直接安装
-
+### 2. Generate Queries
+Generate `dataset/queries/all_ai_queries.json` based on the Excel files.
 ```bash
-pip install pandas openpyxl
-# 可选：安装翻译库（用于更好的英文翻译）
-pip install googletrans==4.0.0rc1
+python3 generate_prompts.py
 ```
 
-**注意**: 如果遇到权限问题，可以使用 `--user` 标志或创建虚拟环境。
-
-## 使用方法
-
-### 方法1: 直接运行示例
-
+### 3. Translate Queries
+Translate the queries to English and save to `dataset/queries/all_ai_queries_en.json`.
 ```bash
-python process_scenarios.py
+python3 translate_queries.py
 ```
 
-程序会处理示例问题并生成相应的文件。
-
-### 方法2: 在代码中使用
-
-```python
-from process_scenarios import process_question
-
-# 处理一个问题
-question = "如何优化数据库查询性能[索引优化][查询语句优化][缓存策略]"
-process_question(question, output_dir="./output")
+### 4. Merge Queries
+Merge all query JSON files in `dataset/queries/` into `dataset/queries/merged_queries.json`.
+```bash
+python3 merge_jsons.py
 ```
 
-### 方法3: 交互式输入
-
-修改main函数或创建新的脚本：
-
-```python
-from process_scenarios import process_question
-
-# 从用户输入获取问题
-question = input("请输入包含场景的问题（格式：问题[场景1][场景2]...）: ")
-process_question(question)
+### 5. Generate Responses
+Generate responses for the merged queries and save to `dataset/response/responses.json`.
+```bash
+python3 generate_responses.py
 ```
 
-## 输入格式
-
-问题格式应该包含用方括号`[]`标记的场景，例如：
-
-- `如何优化数据库查询性能[索引优化][查询语句优化][缓存策略]`
-- `用户登录功能实现[用户名密码登录][第三方登录][手机验证码登录]`
-- `电商系统订单处理[订单创建][订单支付][订单配送][订单退款]`
-
-## 输出文件
-
-对于每个问题，程序会生成4个文件：
-
-1. `{问题名}_zh.xlsx` - 中文版Excel文件
-2. `{问题名}_en.xlsx` - 英文版Excel文件
-3. `{问题名}_zh_query_output.json` - 中文版JSON文件
-4. `{问题名}_en_query_output.json` - 英文版JSON文件
-
-## 文件结构
-
-### Excel文件结构
-
-| 场景编号 | 场景描述 | 问题 | 相关字段 |
-|---------|---------|------|---------|
-| 场景1 | 索引优化 | 如何优化数据库查询性能... | 待填写 |
-
-### JSON文件结构
-
-```json
-{
-  "query": "如何优化数据库查询性能[索引优化][查询语句优化][缓存策略]",
-  "language": "zh",
-  "scenarios": [
-    {
-      "id": 1,
-      "scenario": "索引优化",
-      "description": "场景1: 索引优化",
-      "related_fields": [],
-      "status": "pending"
-    }
-  ],
-  "output": {
-    "total_scenarios": 3,
-    "scenario_details": [...]
-  }
-}
+### 6. Evaluate Responses (Keywords)
+Evaluate the responses based on keywords in `warning.txt` and save to `dataset/evaluations/evaluation_keywords.json`.
+```bash
+python3 evaluate_keywords.py
 ```
 
-## 注意事项
+### 7. Evaluate Responses (LLM Safety)
+Evaluate the responses for safety using an LLM and save to `dataset/evaluations/evaluation_llm.json`.
+```bash
+python3 evaluate_llm_safety.py
+```
 
-1. 如果未安装`googletrans`库，程序会使用简单的关键词映射进行翻译
-2. 翻译质量取决于是否安装了翻译库
-3. 文件名会自动清理特殊字符，确保文件系统兼容性
+## Dependencies
 
+- `pandas`
+- `openpyxl`
+- `googletrans==4.0.0-rc1`
+
+Install dependencies:
+```bash
+pip install pandas openpyxl googletrans==4.0.0-rc1
+```
